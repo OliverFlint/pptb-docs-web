@@ -284,6 +284,7 @@ launchTool(
   options?: {
     primaryConnectionId?: string | null;
     secondaryConnectionId?: string | null;
+    connectionIds?: Array<string | null>;
     noReturn?: boolean;
   },
 ): Promise<unknown>
@@ -295,6 +296,7 @@ launchTool(
 | `prefillData` | `Record<string, unknown>` | Optional data to pre-populate the callee's state. Shape should match the callee's `invocation.prefill` schema. |
 | `options.primaryConnectionId` | `string \| null` | Override the primary Dataverse connection for the callee. Omit to auto-inherit the caller's connection. |
 | `options.secondaryConnectionId` | `string \| null` | Override the secondary Dataverse connection. Omit to let PPTB prompt for it if the callee is a multi-connection tool. |
+| `options.connectionIds` | `Array<string \| null>` | Provide connection IDs positionally for the callee's slots. Keep `null` entries to preserve empty slots; index `0` is primary and index `1` is secondary. |
 | `options.noReturn` | `boolean` | When `true`, signals the caller does not expect data back. The "Return to [Caller]" banner is suppressed in the callee. The Promise still resolves with `null` when the callee closes. |
 
 **Return value:** A `Promise` that resolves with the `Record<string, unknown>` passed to `returnData()` by the callee, or `null` if:
@@ -310,7 +312,7 @@ launchTool(
 </Note>
 
 <Note type="information">
-  If the callee declares `features.multiConnection: "required"` or `"optional"` and no `options.secondaryConnectionId` is provided, PPTB automatically opens the multi-connection selector before launching the callee. If the user cancels, `launchTool` throws `"Connection selection cancelled"`.
+  The callee's `features.connections` declaration determines how many connections it requires and allows. If the available or explicitly supplied connections do not satisfy that declaration, PPTB opens the connection selector before launching the callee. Use `options.connectionIds` to pass slot assignments positionally, including `null` for gaps; `primaryConnectionId` and `secondaryConnectionId` remain supported as legacy slot-specific overrides. Legacy `multiConnection` declarations continue to work for existing tools. If the user cancels selection, `launchTool` throws `"Connection selection cancelled"`.
 </Note>
 
 ---
@@ -411,11 +413,13 @@ getKnownCapabilityTags(): Promise<Array<{ tag: string; description: string }>>
 | `entity-picker` | Browse and select a Dataverse entity (table) |
 | `record-selector` | Browse and select a Dataverse record |
 | `solution-selector` | Pick a Power Platform solution |
-| `odata` | Accept or process OData queries |
+| `webresource-editor` | Edit or manage web resources |
+| `plugin-inspector` | Inspect or manage plugins and assemblies |
+| `pcf-control-builder` | Build or scaffold PCF controls |
 
 <Note type="information">
   The registry is updated without an app release — new tags are added to backend table and become immediately discoverable via `getKnownCapabilityTags()`.
-  If you need a capability tag that is not in the registry, submit a request to the PPTB team to have it added.
+  Custom tag strings are allowed for organisation-internal use, but `pptb-validate` warns when a tag is not in the official registry. Request a registry tag from the PPTB team when it should be discoverable across tools.
 </Note>
 
 <DiscordRequestForm />

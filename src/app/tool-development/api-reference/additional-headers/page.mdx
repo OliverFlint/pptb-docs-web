@@ -1,0 +1,78 @@
+export const metadata = {
+  title: 'Additional Headers',
+  description:
+    'Add HTTP headers to Dataverse and Power Platform API requests from a tool',
+}
+
+export const sections = [
+  { title: 'Overview', id: 'overview' },
+  { title: 'Dataverse API', id: 'dataverse-api' },
+  { title: 'Power Platform API', id: 'power-platform-api' },
+  { title: 'Common Dataverse Headers', id: 'common-dataverse-headers' },
+]
+
+# Additional Headers
+
+Add request headers when an API operation needs behavior beyond the ToolBox API defaults. Header names and values are strings, represented as `Record<string, string>`. Use only headers supported by the endpoint you are calling. {{ className: 'lead' }}
+
+## Overview {{ anchor: true }}
+
+The Dataverse API names its final optional parameter `additionalHeaders`. The Power Platform API names its parameter `headers`. In both cases, pass a plain object of header-name and header-value pairs. Header names are case-insensitive in HTTP; the examples below use the casing shown in Microsoft documentation.
+
+For Dataverse header requirements and behavior, see Microsoft's [HTTP headers guidance](https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/compose-http-requests-handle-errors#http-headers).
+
+## Dataverse API {{ anchor: true }}
+
+Dataverse network methods accept `additionalHeaders?: Record<string, string>` as their final argument, after `connectionTarget`. If you want to use the default primary connection, pass `undefined` for `connectionTarget` before the headers object. You can also pass a legacy connection alias or a zero-based slot index.
+
+```typescript
+const accountRows = await dataverseAPI.queryData(
+  'accounts?$select=name&$top=10',
+  2,
+  {
+    'If-None-Match': 'null',
+    Prefer:
+      'odata.include-annotations="OData.Community.Display.V1.FormattedValue"',
+  },
+)
+```
+
+Here, `2` selects slot 2, and the headers apply to the outgoing Dataverse request. Pass the header object only when the requested operation requires those headers.
+
+For example, to use the primary connection while supplying a header:
+
+```typescript
+const account = await dataverseAPI.retrieve(
+  'account',
+  accountId,
+  ['name'],
+  undefined,
+  { 'If-None-Match': 'null' },
+)
+```
+
+## Power Platform API {{ anchor: true }}
+
+Power Platform API methods accept `headers?: Record<string, string>`. The signatures are `Get(path?, connectionTarget?, headers?)`; `Post`, `Put`, and `Patch` use `(path?, body?, connectionTarget?, headers?)`; and `Delete` uses `(path?, connectionTarget?, headers?, body?)`.
+
+```typescript
+const response = await window.powerplatformAPI.EnvironmentManagement.Get(
+  'environments?api-version=2024-10-01',
+  1,
+  { Accept: 'application/json' },
+)
+```
+
+See the [PowerPlatform API reference](/tool-development/api-reference/powerplatform-api) for the parameter order of each HTTP method.
+
+## Common Dataverse Headers {{ anchor: true }}
+
+| Header | Example value | Use |
+| --- | --- | --- |
+| `If-None-Match` | `null` | Prevent cached responses when retrieving data. |
+| `If-Match` | An entity ETag, or `*` | Apply conditional update behavior. Use the record's ETag when you need optimistic concurrency; `*` can prevent an upsert from creating a missing row. |
+| `Prefer` | `odata.include-annotations="OData.Community.Display.V1.FormattedValue"` | Request formatted values or other supported OData annotations. |
+| `Prefer` | `odata.maxpagesize=500` | Set a preferred page size for a query. |
+| `Consistency` | `Strong` | Request the latest cached metadata or permission data when required; use sparingly because it can affect performance. |
+
+Header support and effects depend on the Dataverse operation. Consult the Microsoft documentation for the specific header and operation before using it. In batch requests, per-operation headers belong on each `BatchRequest`; `additionalHeaders` applies to the outer batch request.

@@ -41,7 +41,8 @@ Use the API through `window.powerplatformAPI`. The surface is organized into ser
 
 ```json
 "features": {
-  "multiConnection": "none",
+  "connections": 1,
+  "minAPI": "1.2.7",
   "enabledForPowerPlatformAPI": true
 }
 ```
@@ -51,6 +52,8 @@ Use the API through `window.powerplatformAPI`. The surface is organized into ser
 ## Shared Client Methods {{ anchor: true }}
 
 Every namespace on `window.powerplatformAPI` exposes the same method shape.
+
+`connectionTarget` defaults to `'primary'` and accepts the legacy aliases `'primary'` and `'secondary'`, or a zero-based numeric slot index: `0` is primary, `1` is secondary, and `2` and above address additional slots. Numeric indexes are capped by the tool's declared `features.connections` maximum.
 
 ### `Get(path?, connectionTarget?, headers?)`
 
@@ -76,7 +79,7 @@ Make a `DELETE` request to the namespace endpoint. A request body is supported w
 
 - `path?: string` - Relative path after the namespace base URL, including query string when needed
 - `body?: unknown` - Optional request payload for write operations
-- `connectionTarget?: 'primary' | 'secondary'` - Optional connection target, defaults to `primary`
+- `connectionTarget?: ConnectionTarget` - Optional connection target, defaults to `primary`; accepts `'primary'`, `'secondary'`, or a zero-based numeric slot index
 - `headers?: Record<string, string>` - Optional custom request headers
 
 **Returns:** `Promise<PowerPlatformResponse>`

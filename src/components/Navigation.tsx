@@ -295,6 +295,10 @@ export const navigation: Array<NavGroup> = [
         href: '/tool-development/api-reference/powerplatform-api',
       },
       {
+        title: 'Additional Headers',
+        href: '/tool-development/api-reference/additional-headers',
+      },
+      {
         title: 'Entra App Registration Setup',
         href: '/authentication/entra-app-registration',
       },

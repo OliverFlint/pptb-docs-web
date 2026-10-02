@@ -74,36 +74,40 @@ Nested inside the top-level `configurations` key.
 
 ## Features Object {{ anchor: true }}
 
-Declare ToolBox-specific capabilities your tool needs. Omit this section entirely when your tool uses the default connection behavior and does not use the Power Platform API. When present, `multiConnection` is required.
+Declare ToolBox-specific capabilities your tool needs. If you omit connection settings, the default is one required Dataverse connection. Desktop 1.2.7 adds `connections`, which replaces the deprecated `multiConnection` and `connectionRequirement` fields.
+
+<RequiresVersion>1.2.7</RequiresVersion>
 
 | Field | Type | Values | Description | Sample |
 |-------|------|--------|-------------|--------|
-| `multiConnection` | `string` | `"none"` \| `"optional"` \| `"required"` | Connection cardinality: one connection, an optional second connection, or a required second connection | `"optional"` |
-| `connectionRequirement` | `string` | `"required"` \| `"optional"` | Whether the tool needs any connection. Defaults to `"required"` | `"optional"` |
+| `connections` | `integer` \| `object` | Integer `0`–`10`, or `{ "min"?: integer, "max"?: integer }` | Exact connection count, or an inclusive allowed range. Object defaults: `min` is `1`; `max` is the resolved `min`. Both bounds must be integers from `0` to `10`, and `min` cannot exceed `max`. | `{ "min": 1, "max": 3 }` |
+| `multiConnection` | `string` | `"none"` \| `"optional"` \| `"required"` | **Deprecated.** Legacy connection cardinality setting; retained for existing manifests. Do not combine with `connections`. | `"optional"` |
+| `connectionRequirement` | `string` | `"required"` \| `"optional"` | **Deprecated.** Legacy setting for whether any connection is required. Do not combine with `connections`. | `"optional"` |
 | `minAPI` | `string` | SemVer | Minimum ToolBox API version the tool requires | `"1.2.0"` |
 | `enabledForPowerPlatformAPI` | `boolean` | `true` \| `false` | Opt the tool in to the Power Platform API. Set to `true` before using `window.powerplatformAPI` | `true` |
 
 ```json
 "features": {
-  "multiConnection": "optional",
-  "connectionRequirement": "required",
+  "connections": { "min": 1, "max": 3 },
   "enabledForPowerPlatformAPI": true,
-  "minAPI": "1.2.0"
+  "minAPI": "1.2.7"
 }
 ```
 
-### Creating Connectionless Tools
+### Declaring Connection Counts and Ranges
 
-Set `connectionRequirement` to `"optional"` when the tool can run without a Dataverse connection. Combine it with `multiConnection: "none"` to let the user open the tool with either zero or one connection.
+An integer requests exactly that many connections. Use `0` for a connectionless tool, or `2` to require exactly two. For an object, omitted bounds use the defaults described above:
 
 ```json
-"features": {
-  "multiConnection": "none",
-  "connectionRequirement": "optional"
-}
+{ "connections": 0 }
+{ "connections": 2 }
+{ "connections": { "max": 5 } }
+{ "connections": { "min": 0, "max": 3 } }
 ```
 
-For tools that can work without a connection but can also use multiple connections, set `connectionRequirement` to `"optional"` and `multiConnection` to `"optional"` or `"required"`. The tool can then open with zero, one, or two connections.
+These declarations resolve to 0–0, 2–2, 1–5, and 0–3 connections, respectively. A range's `min` connections are required before launch; additional connections up to `max` are optional. A tool must be written to work across every count it declares. `connections: 0` launches without a connection picker and hides connection UI for the tool.
+
+`connections` cannot be combined with `multiConnection` or `connectionRequirement`. Existing manifests using the legacy fields remain supported; the validator warns about them so they can be migrated. If using the legacy fields, continue to use the legacy contract and do not add `connections`.
 
 ### Specifying a Minimum API Version
 
@@ -111,7 +115,7 @@ The `minAPI` field lets you declare the lowest ToolBox API version your tool is 
 
 **When to set `minAPI`:**
 
-- Your tool calls an API or uses a feature that was introduced in a specific ToolBox release (for example, `multiConnection` requires **1.2.0** or later).
+- Your tool calls an API or uses a feature that was introduced in a specific ToolBox release (for example, `connections` requires Desktop **1.2.7** or later).
 - You want to prevent runtime errors caused by a user running an older, incompatible version of ToolBox.
 
 **How to determine the correct value:**
@@ -203,10 +207,9 @@ The supported CSP directives are:
     "readmeUrl": "https://raw.githubusercontent.com/myorg/my-awesome-tool/main/README.md"
   },
   "features": {
-    "multiConnection": "optional",
-    "connectionRequirement": "required",
+    "connections": { "min": 1, "max": 2 },
     "enabledForPowerPlatformAPI": true,
-    "minAPI": "1.2.0"
+    "minAPI": "1.2.7"
   },
   "cspExceptions": {
     "connect-src": [

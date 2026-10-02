@@ -6,6 +6,7 @@ export const metadata = {
 
 export const sections = [
   { title: 'CRUD Operations', id: 'crud-operations' },
+  { title: 'Batch Operations', id: 'batch-operations' },
   { title: 'Relationship Associations', id: 'relationship-associations' },
   { title: 'Queries', id: 'queries' },
   { title: 'Metadata', id: 'metadata' },
@@ -32,7 +33,9 @@ Complete HTTP client for interacting with Microsoft Dataverse. {{ className: 'le
 
 ## CRUD Operations {{ anchor: true }}
 
-Each method accepts an optional `connectionTarget` parameter to specify which connection to use (`'primary' | 'secondary'`). Defaults to `'primary'`.
+Methods that operate on a Dataverse environment accept an optional `connectionTarget`, which defaults to `'primary'`. `ConnectionTarget` accepts the legacy aliases `'primary'` and `'secondary'`, or a zero-based numeric slot index: `0` is primary, `1` is secondary, and `2` and above address additional slots. Numeric indexes are capped by the tool's declared `features.connections` maximum.
+
+Network methods also accept optional `additionalHeaders` (`Record<string, string>`) as their final argument when custom HTTP headers are needed.
 
 ### `dataverseAPI.create(entityLogicalName, record, connectionTarget?)`
 
@@ -42,7 +45,7 @@ Creates a new record in the primary or secondary dataverse.
 **Parameters:**  
 `entityLogicalName: string` Logical name of the entity  
 `record: Record<string, unknown>` Object containing the record data to create  
-`connectionTarget?: 'primary' | 'secondary'` Optional connection target for multi-connection tools ('primary' or 'secondary'). Defaults to 'primary'.  
+`connectionTarget?: ConnectionTarget` Optional connection target; defaults to `'primary'`.<br />
 **Returns:** `Promise<CreateResult>` Object containing the created record ID (`id`) and any returned fields
 
 ```typescript
@@ -74,7 +77,7 @@ Retrieve a single record.
 `entityLogicalName: string` Logical name of the entity
 `id: string` GUID of the record to retrieve  
 `columns?: string[]` Optional array of column names to retrieve (retrieves all if not specified)  
-`connectionTarget?: 'primary' | 'secondary'` Optional connection target for multi-connection tools ('primary' or 'secondary'). Defaults to 'primary'.  
+`connectionTarget?: ConnectionTarget` Optional connection target; defaults to `'primary'`.<br />
 **Returns:** `Promise<Record<string, any>>` Object representing the retrieved record
 
 ```typescript
@@ -107,7 +110,7 @@ Update an existing record.
 `entityLogicalName: string` Logical name of the entity  
 `id: string` GUID of the record to update  
 `record: Record<string, unknown>` Object containing the record data to update  
-`connectionTarget?: 'primary' | 'secondary'` Optional connection target for multi-connection tools ('primary' or 'secondary'). Defaults to 'primary'.  
+`connectionTarget?: ConnectionTarget` Optional connection target; defaults to `'primary'`.<br />
 **Returns:** `Promise<void>` Successful completion
 
 ```typescript
@@ -134,7 +137,7 @@ Deletes a record.
 **Parameters:**  
 `entityLogicalName: string` Logical name of the entity  
 `id: string` GUID of the record to delete  
-`connectionTarget?: 'primary' | 'secondary'` Optional connection target for multi-connection tools ('primary' or 'secondary'). Defaults to 'primary'.  
+`connectionTarget?: ConnectionTarget` Optional connection target; defaults to `'primary'`.<br />
 **Returns:** `Promise<void>` Successful completion
 
 ```typescript
@@ -157,7 +160,7 @@ Creates multiple records in Dataverse
 **Parameters:**  
 `entityLogicalName` Logical name of the entity  
 `records` Array of record data to create, each including the "@odata.type" property  
-`connectionTarget` Optional connection target for multi-connection tools ('primary' or 'secondary').  
+`connectionTarget?: ConnectionTarget` Optional connection target.<br />
 Defaults to 'primary'.  
 **Returns:** `Promise<string[]>` Array of strings representing the created record IDs
 
@@ -176,7 +179,7 @@ Updates multiple records in Dataverse
 **Parameters:**  
 `entityLogicalName` Logical name of the entity  
 `records` Array of record data to update, each including the "id" property and the "@odata.type" property  
-`connectionTarget` Optional connection target for multi-connection tools ('primary' or 'secondary').  
+`connectionTarget?: ConnectionTarget` Optional connection target.<br />
 Defaults to 'primary'.  
 **Returns:** `Promise<void>` Successful completion
 
@@ -195,6 +198,46 @@ await dataverseAPI.updateMultiple('account', [
 ])
 ```
 
+## Batch Operations {{ anchor: true }}
+
+Both methods submit multiple Dataverse Web API requests to the selected connection. A request contains an HTTP method and relative URL, with optional request headers, body, and `contentId`. Both methods return per-request status, response headers, optional body, and optional `contentId`.
+
+### `dataverseAPI.executeBatch(requests, connectionTarget?, additionalHeaders?)`
+
+Submit a collection of Dataverse requests as a batch.
+
+**Parameters:** `requests: BatchRequest[]`; optional `connectionTarget?: ConnectionTarget` (defaults to `'primary'`); optional `additionalHeaders?: Record<string, string>` applied to the outer request.
+
+**Returns:** `Promise<BatchResult[]>`
+
+```typescript
+const results = await dataverseAPI.executeBatch(
+  [
+    { method: 'GET', url: 'accounts?$select=name&$top=5' },
+    { method: 'GET', url: 'contacts?$select=fullname&$top=5' },
+  ],
+  2,
+)
+```
+
+### `dataverseAPI.executeTransaction(requests, connectionTarget?, additionalHeaders?)`
+
+Submit the requests as a transaction.
+
+**Parameters:** `requests: BatchRequest[]`; optional `connectionTarget?: ConnectionTarget` (defaults to `'primary'`); optional `additionalHeaders?: Record<string, string>` applied to the outer request.
+
+**Returns:** `Promise<BatchResult[]>`
+
+```typescript
+const results = await dataverseAPI.executeTransaction(
+  [
+    { method: 'PATCH', url: 'accounts(account-id)', body: { name: 'Contoso' } },
+    { method: 'POST', url: 'contacts', body: { firstname: 'Avery' } },
+  ],
+  2,
+)
+```
+
 ## Relationship Associations {{ anchor: true }}
 
 ### `dataverseAPI.associate(primaryEntityName, primaryEntityId, relationshipName, relatedEntityName, relatedEntityId, connectionTarget?)`
@@ -209,7 +252,7 @@ Associate two records in a many-to-many relationship.
 `relationshipName: string` Logical name of the N-to-N relationship (e.g., 'systemuserroles_association', 'teammembership_association')  
 `relatedEntityName: string` Logical name of the related entity (e.g., 'role', 'systemuser')  
 `relatedEntityId: string` GUID of the related record  
-`connectionTarget?: 'primary' | 'secondary'` Optional connection target for multi-connection tools ('primary' or 'secondary'). Defaults to 'primary'.  
+`connectionTarget?: ConnectionTarget` Optional connection target; defaults to `'primary'`.<br />
 **Returns:** `Promise<void>` Successful completion
 
 ```typescript
@@ -253,7 +296,7 @@ Disassociate two records in a many-to-many relationship.
 `primaryEntityId: string` GUID of the primary record  
 `relationshipName: string` Logical name of the N-to-N relationship (e.g., 'systemuserroles_association', 'teammembership_association')  
 `relatedEntityId: string` GUID of the related record to disassociate  
-`connectionTarget?: 'primary' | 'secondary'` Optional connection target for multi-connection tools ('primary' or 'secondary'). Defaults to 'primary'.  
+`connectionTarget?: ConnectionTarget` Optional connection target; defaults to `'primary'`.<br />
 **Returns:** `Promise<void>` Successful completion
 
 ```typescript
@@ -292,7 +335,7 @@ await dataverseAPI.disassociate(
 Execute a FetchXML query.  
 **Parameters:**  
 `fetchXml: string` FetchXML query string  
-`connectionTarget?: 'primary' | 'secondary'` Optional connection target for multi-connection  
+`connectionTarget?: ConnectionTarget` Optional connection target for multi-connection
 **Returns:** `Promise<FetchXmlResult>` Object with value array containing query results, odata context and paging cookie
 
 **FetchXmlResult Type:**  
@@ -329,7 +372,7 @@ Alias of `fetchXmlQuery()` for backward compatibility.
 
 **Parameters:**  
 `fetchXml: string` FetchXML query string  
-`connectionTarget?: 'primary' | 'secondary'` Optional connection target for multi-connection tools ('primary' or 'secondary'). Defaults to 'primary'.  
+`connectionTarget?: ConnectionTarget` Optional connection target; defaults to `'primary'`.<br />
 **Returns:** `Promise<FetchXmlResult>` Object with value array containing query results
 
 ```typescript
@@ -345,7 +388,7 @@ Retrieve multiple records with OData query options.
 
 **Parameters:**  
 `odataQuery: string` OData query string with parameters like $select, $filter, $orderby, $top, $skip, $expand  
-`connectionTarget?: 'primary' | 'secondary'` Optional connection target for multi-connection tools ('primary' or 'secondary'). Defaults to 'primary'.  
+`connectionTarget?: ConnectionTarget` Optional connection target; defaults to `'primary'`.<br />
 **Returns:** `Promise<{ value: Record<string, unknown>[] }>` Object with value array containing query results
 
 ```typescript
@@ -386,7 +429,7 @@ Get entity metadata.
 `entityLogicalName: string` Logical name or entity id of the entity  
 `searchByLogicalName: boolean` Boolean indicating whether to search by logical name (true) or metadata ID (false)  
 `entityProperties?: string[]` Optional array of property or column names to retrieve (retrieves all if not specified)  
-`connectionTarget?: 'primary' | 'secondary'` Optional connection target for multi-connection tools ('primary' or 'secondary'). Defaults to 'primary'.  
+`connectionTarget?: ConnectionTarget` Optional connection target; defaults to `'primary'`.<br />
 **Returns:** `Promise<EntityMetadata>` Object containing entity metadata
 
 ```typescript
@@ -427,7 +470,7 @@ Get related metadata for a specific entity (attributes, relationships, etc.)
 `entityLogicalName: string` Logical name of the entity  
 `relatedPath: EntityRelatedMetadataPath` Path after EntityDefinitions(LogicalName='name'). Supports collections and specific records, e.g. `Attributes`, `Keys`, `ManyToOneRelationships`, `Attributes(LogicalName='name')`, `Attributes(LogicalName='industrycode')/OptionSet`  
 `relatedProperties?: string[]` Optional array of property or column names to retrieve (retrieves all if not specified)  
-`connectionTarget?: 'primary' | 'secondary'` Optional connection target for multi-connection tools ('primary' or 'secondary'). Defaults to 'primary'.  
+`connectionTarget?: ConnectionTarget` Optional connection target; defaults to `'primary'`.<br />
 **Returns:** `Promise<EntityRelatedMetadataResponse<P>>` Returns either a collection (`{ value: [...] }`) or a single metadata object depending on `relatedPath`
 
 ```typescript
@@ -477,7 +520,7 @@ console.log('Attributes from secondary connection:', attributes.value)
 Get metadata for all entities  
 **Parameters:**  
 `entityProperties?: string[]` Optional array of property or column names to retrieve (retrieves LogicalName, DisplayName, MetadataId by default)  
-`connectionTarget?: 'primary' | 'secondary'` Optional connection target for multi-connection tools ('primary' or 'secondary'). Defaults to 'primary'.  
+`connectionTarget?: ConnectionTarget` Optional connection target; defaults to `'primary'`.<br />
 **Returns:** `Promise<{ value: any[] }>` Object with value array containing all entity metadata
 
 ```typescript
@@ -529,7 +572,7 @@ Retrieve the complete CSDL/EDMX metadata document for the Dataverse environment.
 Returns the full OData service document as raw XML containing comprehensive metadata for all entities, actions, functions, and complex types in the environment. The response is automatically compressed with gzip during transfer and decompressed transparently.
 
 **Parameters:**  
-`connectionTarget?: 'primary' | 'secondary'` Optional connection target for multi-connection tools ('primary' or 'secondary'). Defaults to 'primary'.  
+`connectionTarget?: ConnectionTarget` Optional connection target; defaults to `'primary'`.<br />
 **Returns:** `Promise<string>` Raw CSDL/EDMX XML document (typically 1-5MB)
 
 **What's included in the CSDL document:**
@@ -786,7 +829,7 @@ console.log('Actions returning Guid:', actionsReturningGuid)
 Get solutions from the environment  
 **Parameters:**  
 `selectColumns: string[]` Required array of column names to retrieve (must contain at least one column)  
-`connectionTarget?: 'primary' | 'secondary'` Optional connection target for multi-connection tools ('primary' or 'secondary'). Defaults to 'primary'.  
+`connectionTarget?: ConnectionTarget` Optional connection target; defaults to `'primary'`.<br />
 **Returns:** `Promise<{ value: any[] }>` Object with value array containing solutions
 
 ```typescript
@@ -875,7 +918,7 @@ Create a new entity (table) in Dataverse.
 **Parameters:**  
 `entityDefinition: object` Entity metadata definition  
 `options?: object` Optional settings (e.g., `{ solutionUniqueName: "MySolution" }`)  
-`connectionTarget?: 'primary' | 'secondary'` Connection target  
+`connectionTarget?: ConnectionTarget` Connection target
 **Returns:** `Promise<{ id: string }>` Object with the new entity's MetadataId
 
 ```typescript
@@ -921,7 +964,7 @@ Update an existing entity's metadata.
 `entityIdentifier: string` Entity MetadataId or LogicalName  
 `entityDefinition: object` Updated entity metadata  
 `options?: object` Optional settings (e.g., `{ mergeLabels: true }`)  
-`connectionTarget?: 'primary' | 'secondary'` Connection target  
+`connectionTarget?: ConnectionTarget` Connection target<br />
 **Returns:** `Promise<void>`
 
 ```typescript
@@ -949,7 +992,7 @@ Delete an entity from Dataverse.
 
 **Parameters:**  
 `entityIdentifier: string` Entity MetadataId or LogicalName  
-`connectionTarget?: 'primary' | 'secondary'` Connection target  
+`connectionTarget?: ConnectionTarget` Connection target<br />
 **Returns:** `Promise<void>`
 
 ```typescript
@@ -971,7 +1014,7 @@ Create a new attribute (column) on an entity.
 `entityLogicalName: string` Logical name of the entity  
 `attributeDefinition: object` Attribute metadata definition  
 `options?: object` Optional settings (e.g., `{ solutionUniqueName: "MySolution" }`)  
-`connectionTarget?: 'primary' | 'secondary'` Connection target  
+`connectionTarget?: ConnectionTarget` Connection target<br />
 **Returns:** `Promise<{ id: string }>` Object with the new attribute's MetadataId
 
 ```typescript
@@ -1079,7 +1122,7 @@ Update an existing attribute's metadata.
 `attributeIdentifier: string` Attribute MetadataId or LogicalName  
 `attributeDefinition: object` Updated attribute metadata  
 `options?: object` Optional settings (e.g., `{ mergeLabels: true }`)  
-`connectionTarget?: 'primary' | 'secondary'` Connection target  
+`connectionTarget?: ConnectionTarget` Connection target<br />
 **Returns:** `Promise<void>`
 
 ```typescript
@@ -1107,7 +1150,7 @@ Delete an attribute from an entity.
 **Parameters:**  
 `entityLogicalName: string` Logical name of the entity  
 `attributeIdentifier: string` Attribute MetadataId or LogicalName  
-`connectionTarget?: 'primary' | 'secondary'` Connection target  
+`connectionTarget?: ConnectionTarget` Connection target<br />
 **Returns:** `Promise<void>`
 
 ```typescript
@@ -1130,7 +1173,7 @@ Create a polymorphic lookup attribute that can reference multiple entity types (
 `entityLogicalName: string` Logical name of the entity  
 `attributeDefinition: object` Lookup attribute metadata with Targets array  
 `options?: object` Optional settings  
-`connectionTarget?: 'primary' | 'secondary'` Connection target  
+`connectionTarget?: ConnectionTarget` Connection target<br />
 **Returns:** `Promise<{ AttributeId: string }>` Object with the new attribute's ID
 
 ```typescript
@@ -1177,7 +1220,7 @@ Create a new entity relationship (1:N or N:N).
 **Parameters:**  
 `relationshipDefinition: object` Relationship metadata definition  
 `options?: object` Optional settings  
-`connectionTarget?: 'primary' | 'secondary'` Connection target  
+`connectionTarget?: ConnectionTarget` Connection target<br />
 **Returns:** `Promise<{ id: string }>` Object with the new relationship's MetadataId
 
 ```typescript
@@ -1232,7 +1275,7 @@ Update an existing relationship's metadata.
 `relationshipIdentifier: string` Relationship MetadataId or SchemaName  
 `relationshipDefinition: object` Updated relationship metadata  
 `options?: object` Optional settings  
-`connectionTarget?: 'primary' | 'secondary'` Connection target  
+`connectionTarget?: ConnectionTarget` Connection target<br />
 **Returns:** `Promise<void>`
 
 ```typescript
@@ -1260,7 +1303,7 @@ Delete a relationship.
 
 **Parameters:**  
 `relationshipIdentifier: string` Relationship MetadataId or SchemaName  
-`connectionTarget?: 'primary' | 'secondary'` Connection target  
+`connectionTarget?: ConnectionTarget` Connection target<br />
 **Returns:** `Promise<void>`
 
 ```typescript
@@ -1281,7 +1324,7 @@ Create a new global option set (choice) that can be shared across multiple entit
 **Parameters:**  
 `optionSetDefinition: object` Option set metadata definition  
 `options?: object` Optional settings  
-`connectionTarget?: 'primary' | 'secondary'` Connection target  
+`connectionTarget?: ConnectionTarget` Connection target
 **Returns:** `Promise<{ id: string }>` Object with the new option set's MetadataId
 
 ```typescript
@@ -1342,7 +1385,7 @@ Update an existing global option set.
 `optionSetIdentifier: string` Option set Name or MetadataId  
 `optionSetDefinition: object` Updated option set metadata  
 `options?: object` Optional settings  
-`connectionTarget?: 'primary' | 'secondary'` Connection target  
+`connectionTarget?: ConnectionTarget` Connection target
 **Returns:** `Promise<void>`
 
 ```typescript
@@ -1369,7 +1412,7 @@ Delete a global option set.
 
 **Parameters:**  
 `optionSetIdentifier: string` Option set Name or MetadataId  
-`connectionTarget?: 'primary' | 'secondary'` Connection target  
+`connectionTarget?: ConnectionTarget` Connection target
 **Returns:** `Promise<void>`
 
 ```typescript
@@ -1395,7 +1438,7 @@ Insert a new option value into a local or global option set.
 `params.Value: number` Integer value for the new option  
 `params.Label: Label` Label object for the option  
 `params.Description?: Label` Optional description  
-`connectionTarget?: 'primary' | 'secondary'` Connection target  
+`connectionTarget?: ConnectionTarget` Connection target
 **Returns:** `Promise<void>`
 
 ```typescript
@@ -1439,7 +1482,7 @@ Update an existing option value.
 `params.Label?: Label` New label  
 `params.Description?: Label` New description  
 `params.MergeLabels?: boolean` Whether to merge or replace labels  
-`connectionTarget?: 'primary' | 'secondary'` Connection target  
+`connectionTarget?: ConnectionTarget` Connection target<br />
 **Returns:** `Promise<Record<string, unknown>>`
 
 ```typescript
@@ -1467,7 +1510,7 @@ Delete an option value from an option set.
 `params.AttributeLogicalName?: string` Attribute name (for local option sets)  
 `params.OptionSetName?: string` Option set name (for global option sets)  
 `params.Value: number` Integer value to delete  
-`connectionTarget?: 'primary' | 'secondary'` Connection target  
+`connectionTarget?: ConnectionTarget` Connection target<br />
 **Returns:** `Promise<Record<string, unknown>>`
 
 ```typescript
@@ -1493,7 +1536,7 @@ Reorder option values in an option set.
 `params.AttributeLogicalName?: string` Attribute name (for local option sets)  
 `params.OptionSetName?: string` Option set name (for global option sets)  
 `params.Values: number[]` Array of values in the desired order  
-`connectionTarget?: 'primary' | 'secondary'` Connection target  
+`connectionTarget?: ConnectionTarget` Connection target<br />
 **Returns:** `Promise<Record<string, unknown>>`
 
 ```typescript
@@ -1521,7 +1564,7 @@ Execute a custom action or function using a unified interface. Supports both bou
 `request.operationName: string` Name of the action/function  
 `request.operationType: 'action' | 'function'` Type of operation  
 `request.parameters: Record<string, unknown>` Operation parameters (optional)  
-`connectionTarget?: 'primary' | 'secondary'` Optional connection target for multi-connection tools ('primary' or 'secondary'). Defaults to 'primary'.  
+`connectionTarget?: ConnectionTarget` Optional connection target for multi-connection tools ('primary' or 'secondary'). Defaults to 'primary'.<br />
 **Returns:** `Promise<Record<string, unknown>>` Operation result
 
 ```typescript
@@ -1563,7 +1606,7 @@ const unboundResultSecondary = await dataverseAPI.execute(
 Publish customizations for the current environment.  
 **Parameters:**  
 `tableLogicalName?: string` Optional table (entity) logical name to publish. If omitted, all pending customizations are published.  
-`connectionTarget?: 'primary' | 'secondary'` Optional connection target for multi-connection tools ('primary' or 'secondary'). Defaults to 'primary'.
+`connectionTarget?: ConnectionTarget` Optional connection target; defaults to `'primary'`.
 **Returns:** `Promise<void>` Successful completion
 
 ```typescript
@@ -1583,7 +1626,7 @@ Deploy (import) a Dataverse solution.
 **Parameters:**  
 `solutionContent: string | ArrayBuffer | ArrayBufferView` Base64 solution zip or binary data  
 `options?: { importJobId?: string; publishWorkflows?: boolean; overwriteUnmanagedCustomizations?: boolean; skipProductUpdateDependencies?: boolean; convertToManaged?: boolean }` Optional import settings  
-`connectionTarget?: 'primary' | 'secondary'` Optional connection target for multi-connection tools ('primary' or 'secondary'). Defaults to 'primary'.  
+`connectionTarget?: ConnectionTarget` Optional connection target; defaults to `'primary'`.
 **Returns:** `Promise<{ ImportJobId: string }>` Import job identifier for tracking status
 
 ```typescript
@@ -1605,7 +1648,7 @@ Get the status of a solution import job.
 
 **Parameters:**  
 `importJobId: string` Import job GUID returned by `deploySolution()`  
-`connectionTarget?: 'primary' | 'secondary'` Optional connection target for multi-connection tools ('primary' or 'secondary'). Defaults to 'primary'.  
+`connectionTarget?: ConnectionTarget` Optional connection target; defaults to `'primary'`.
 **Returns:** `Promise<Record<string, unknown>>` Import status details and progress data
 
 ```typescript

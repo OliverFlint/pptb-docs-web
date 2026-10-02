@@ -126,8 +126,10 @@ The validator checks every field that the official review pipeline inspects:
 | `configurations.website` | ⚠️ optional | If present: must be a valid HTTPS URL |
 | `configurations.funding` | ⚠️ optional | If present: must be a valid URL |
 | `cspExceptions` | ⚠️ optional | Each directive must be an array of valid origin strings |
-| `features.multiConnection` | Required with `features` | Must be `"required"`, `"optional"`, or `"none"` |
-| `features.connectionRequirement` | ⚠️ optional | If present: must be `"required"` or `"optional"`; defaults to `"required"` |
+| `features.connections` | Optional | Integer from `0` to `10`, or an object with only `min` and/or `max` integer bounds from `0` to `10`; resolved `min` must not exceed `max` |
+| `features.multiConnection` | Deprecated | Legacy value must be `"required"`, `"optional"`, or `"none"`; emits a deprecation warning |
+| `features.connectionRequirement` | Deprecated | Legacy value, if present, must be `"required"` or `"optional"`; emits a deprecation warning |
+| Connection declaration | Required with `features` | Declare `connections` or the legacy `multiConnection`; `connections` cannot be combined with either legacy connection field |
 | `features.minAPI` | ⚠️ optional | If present: must be a valid semantic version string |
 | `features.enabledForPowerPlatformAPI` | ⚠️ optional | If present: must be `true` or `false` |
 

@@ -7,7 +7,7 @@ export const metadata = {
 export const sections = [
   { title: 'Tool Lifecycle', id: 'tool-lifecycle' },
   { title: 'Connections', id: 'connections' },
-  { title: 'Secondary Connections', id: 'secondary-connections' },
+  { title: 'Multiple Connections', id: 'multiple-connections' },
   { title: 'Utils', id: 'utils' },
   { title: 'Terminal', id: 'terminal' },
   { title: 'Invocation API', id: 'invocation-api' },
@@ -120,61 +120,76 @@ Example values that may appear in `scopesForPowerPlatformAPI`:
 ]
 ```
 
-## Secondary Connections {{ anchor: true }}
+## Multiple Connections {{ anchor: true }}
 
-As a tool developer, you may require access to a second Dataverse connections. This can be useful for copying data or configuration between environments.
+As a tool developer, you may require access to more than one Dataverse connection. This can be useful for copying data or configuration between environments.
 
-To enable this feature, you must update the package.json file to indicate your tool requires multiconnections.
+In Desktop 1.2.7 and later, declare the exact count or range your tool supports using `features.connections` in `package.json`.
 
 ```json
 {
-  "name": "@toolname",
-  "version": "0.1.10",
-  "displayName": " My Awesome Tool",
-  "description": "A Power Platform Tool Box tool to do awesome things",
-  "main": "index.html",
-  "icon": "icons/test.svg",
-  "contributors": [
-    "Awesome Developer "
-  ],
-  // Other properties...
-  // This section enables multiple connections
   "features": {
-    "multiConnection": "required" or "optional",
-    "minAPI": "1.2.0"
-  },
+    "connections": { "min": 2, "max": 2 },
+    "minAPI": "1.2.7"
+  }
+}
 ```
 
-<Note type="warning">
-  Use top-level `icon` for your SVG icon path (relative to the `dist` root, for example `icons/test.svg`). To ensure the icon adapts to dark/light theme, set SVG fill to `currentColor`.
-</Note>
+The example requires exactly two connections. Use an integer for an exact count from 0 to 10, or `{ "min": 0, "max": 3 }` to allow launch with no connection and up to three connections. The deprecated `multiConnection` and `connectionRequirement` fields remain supported for existing tools, but cannot be used together with `connections`.
 
-When the user opens your tool, they are presented with the option to connect to a primary and secondary environment.
+### `toolboxAPI.connections.getConnection(target)`
 
-### `toolboxAPI.connections.getSecondaryConnection()`
+<RequiresVersion>1.2.7</RequiresVersion>
 
-<RequiresVersion>1.2.0</RequiresVersion>
-
-Returns the currently active secondary connection or null if none is configured.
+Returns the connection assigned to the requested slot, or `null` if that slot is empty. `target` accepts the legacy aliases `'primary'` and `'secondary'`, or a zero-based numeric slot index (`0` is primary, `1` is secondary, `2` and above are additional slots).
 
 ```typescript
-const secondaryConnection =
-  await toolboxAPI.connections.getSecondaryConnection()
+const secondaryConnection = await toolboxAPI.connections.getConnection('secondary')
 
 if (secondaryConnection) {
-  console.log('Connected to:', secondaryConnection.name)
-  console.log('Environment:', secondaryConnection.environment)
-  console.log('URL:', secondaryConnection.url)
+  console.log('Secondary environment:', secondaryConnection.name)
 } else {
-  console.log('No active secondary connection')
+  console.log('No connection assigned to the secondary slot')
 }
 ```
 
 **Returns:** `Promise<Connection | null>`
 
+### `toolboxAPI.connections.getConnections()`
+
+<RequiresVersion>1.2.7</RequiresVersion>
+
+Returns all connection slots in slot order. Empty slots are `null` and are not removed or compacted; use each array index as the slot index (slot `0` is primary, slot `1` is secondary).
+
 ```typescript
-// Same `Connection` type as documented above.
+const connections = await toolboxAPI.connections.getConnections()
+
+for (const [slotIndex, connection] of connections.entries()) {
+  if (connection === null) {
+    console.log(`Slot ${slotIndex} is empty`)
+    continue
+  }
+
+  console.log(`Slot ${slotIndex}: ${connection.name}`)
+}
 ```
+
+**Returns:** `Promise<Array<Connection | null>>`
+
+### `toolboxAPI.connections.getSecondaryConnection()`
+
+<RequiresVersion>1.2.0</RequiresVersion>
+
+**Deprecated:** Prefer `getConnection('secondary')` for the secondary slot, or `getConnections()` to enumerate all slots. This method remains available and continues to work for backward compatibility; it has not been removed in Desktop 1.2.7.
+
+Returns the currently active secondary connection or `null` if none is configured.
+
+```typescript
+const secondaryConnection =
+  await toolboxAPI.connections.getSecondaryConnection()
+```
+
+**Returns:** `Promise<Connection | null>`
 
 When interacting with dataverse and you want to use the secondary connection, pass the connectionTarget parameter as 'secondary'. ConnectionTarget is optional and defaults to 'primary'.
 
@@ -248,18 +263,18 @@ document.body.classList.add(`theme-${theme}`)
 
 **Returns:** `Promise<'light' | 'dark'>`
 
-### `toolboxAPI.utils.executeParallel(...promises)`
+### `toolboxAPI.utils.executeParallel(...operations)`
 
 <RequiresVersion>1.0.17</RequiresVersion>
 
-Execute multiple async operations in parallel.
+Execute multiple async operations in parallel. Each operation can be an already-started promise or an async function, which is called when execution begins.
 
 ```typescript
 const [account, contact, opportunities] =
   await toolboxAPI.utils.executeParallel(
     dataverseAPI.retrieve('account', accountId, ['name']),
     dataverseAPI.retrieve('contact', contactId, ['fullname']),
-    dataverseAPI.fetchXmlQuery(opportunityFetchXml),
+    () => dataverseAPI.fetchXmlQuery(opportunityFetchXml),
   )
 
 console.log('All data fetched:', account, contact, opportunities)
@@ -289,7 +304,7 @@ await toolboxAPI.utils.openInConnectionBrowser(
 **Parameters:**
 
 - `url: string` — The URL to open (must use `https:` or `http:` protocol)
-- `connectionTarget?: 'primary' | 'secondary'` — Which connection's browser profile to use. Defaults to `'primary'`.
+- `connectionTarget?: ConnectionTarget` — Which connection's browser profile to use. Accepts `'primary'`, `'secondary'`, or a zero-based numeric slot index; defaults to `'primary'`.
 
 **Returns:** `Promise<void>`
 
@@ -391,7 +406,7 @@ if (result) {
 
 - `targetToolId: string` — npm package name (toolId) of the tool to launch
 - `prefillData?: Record<string, unknown>` — Data to pre-populate the target tool's state
-- `options?: object` — Optional connection overrides: `{ primaryConnectionId?, secondaryConnectionId? }`
+- `options?: object` — Optional connection overrides: `{ primaryConnectionId?, secondaryConnectionId?, connectionIds?, noReturn? }`. `connectionIds?: Array<string | null>` assigns IDs positionally by slot; preserve `null` entries for gaps. Legacy primary and secondary overrides remain available.
 
 **Returns:** `Promise<unknown>` — Data returned by the target tool, or `null` if it closes without returning data
 
@@ -460,8 +475,19 @@ interface ToolContext {
   connectionId?: string | null
   secondaryConnectionUrl?: string | null
   secondaryConnectionId?: string | null
+  connectionIds?: Array<string | null>
+  connectionUrls?: Array<string | null>
+  invocationContext?: {
+    source?: 'tool' | 'mcp'
+    mode?: 'one-way' | 'two-way'
+    correlationId?: string
+    timeoutMs?: number
+    expectsResponse?: boolean
+  }
 }
 ```
+
+`connectionIds` and `connectionUrls` are aligned arrays indexed by slot and preserve `null` entries for unassigned slots. `invocationContext` is optional metadata supplied when another tool or the MCP server launched this tool; branch on its `source` or `mode` instead of assuming it is present.
 
 <Note type="important">
   `ToolContext` intentionally does not contain access tokens. Use `dataverseAPI` for authenticated Dataverse operations.
