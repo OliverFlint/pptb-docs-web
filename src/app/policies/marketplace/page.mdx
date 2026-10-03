@@ -10,6 +10,7 @@ export const sections = [
   { title: 'Tool Naming', id: 'tool-naming' },
   { title: 'Attribution and Branding', id: 'attribution-and-branding' },
   { title: 'Listing Quality and Duplication', id: 'listing-quality-and-duplication' },
+  { title: 'Ports and Derived Works', id: 'ports-and-derived-works' },
   { title: 'Submission Volume', id: 'submission-volume' },
   { title: 'Destructive Operations', id: 'destructive-operations' },
   { title: 'Data and Network Use', id: 'data-and-network-use' },
@@ -48,7 +49,7 @@ The `displayName` field is what users see in the marketplace, sidebar, and searc
 1. **No publisher branding in the name.** Do not prefix or suffix the `displayName` with a company, consultancy, product line, personal name, handle, or initialism.
 2. **No suite naming.** Do not use the name to group tools into a branded family or suite. Group related tools in your README or publisher links instead.
 3. **No implied endorsement.** Do not use *Microsoft*, *Official*, *PPTB*, *Power Platform ToolBox*, or *Verified* in a name, or anything suggesting the tool is published or endorsed by Microsoft or the PPTB team, unless it is.
-4. **No borrowed names.** Do not use the name of another tool — in PPTB, XrmToolBox, or elsewhere — unless you are its author or have the author's permission. Describing compatibility in the README ("inspired by", "port of") is fine.
+4. **No borrowed names.** Do not use the name of another tool — in PPTB, XrmToolBox, or elsewhere — unless you are its author or have the author's written permission. Describe the relationship in your README instead; see [Ports and Derived Works](#ports-and-derived-works).
 5. **No keyword stuffing.** No version numbers, emoji, ALL-CAPS for emphasis, superlatives (*Best*, *Ultimate*, *#1*), or lists of features in the name.
 6. **No near-duplicates.** Do not choose a name that is confusingly similar to an existing marketplace tool.
 
@@ -94,6 +95,39 @@ Every listing must offer real, distinct value.
 - **One job, one tool — not one tool per feature.** Do not split a single tool into several thin listings to occupy more of the marketplace. Closely related features belong in tabs or views of one tool.
 - **No placeholders.** Do not publish stubs, demos, "coming soon" tools, or tools whose core feature does not work, to reserve a name or a category.
 - **Accurate descriptions.** The `description` and README must match what the tool actually does today. Do not describe planned features as present.
+
+## Ports and Derived Works {{ anchor: true }}
+
+Many PPTB tools bring functionality from XrmToolBox and other tools to PPTB. That is welcome — and the people who built the originals deserve credit and respect.
+
+### What counts as a port
+
+| You are… | It is… | What applies |
+| --- | --- | --- |
+| Building a tool that does what another tool does, without using its code | A **reimplementation** | Credit is required if your tool closely mirrors the original's features or workflow |
+| Translating or adapting another tool's source code | A **port** (a derived work) | Credit **and** the original's license both apply |
+| Asking an AI assistant to convert, translate, or rewrite another tool's source code | A **port** | Exactly the same as porting by hand, even if every line is rewritten |
+
+### Rules
+
+1. **Credit the original.** Ports and close reimplementations must include a **Credits** section in the README naming the original tool, its author, a link to it, and its license.
+2. **Comply with the original license.** For ports, keep the original copyright and license notices and make sure your tool's license is compatible with the original's. If the original has **no license**, you need the author's written permission to port its code. License compliance is the publisher's responsibility; PPTB does not give legal advice.
+3. **Don't list the original author as a contributor without their consent.** The `contributors` field identifies the people accountable for maintaining your tool and implies endorsement. Credit the original author in the README instead.
+4. **Don't reuse names or assets without permission.** The original tool's name, icon, logo, and screenshots require the author's written permission.
+5. **Talk to the original author first.** This is strongly recommended, though not required. Some authors are already planning their own PPTB versions, and a conversation can turn a competing listing into a collaboration.
+
+A README Credits section can be short:
+
+```md
+## Credits
+
+This tool is a port of [Original Tool](https://github.com/author/original-tool)
+for XrmToolBox by Jane Author, used under the MIT License.
+```
+
+<Note type="warning">
+  If the original author reports a port that has no license or permission basis, the tool is **delisted** until the issue is resolved.
+</Note>
 
 ## Submission Volume {{ anchor: true }}
 
