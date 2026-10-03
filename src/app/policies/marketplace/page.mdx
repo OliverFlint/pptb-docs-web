@@ -1,0 +1,167 @@
+export const metadata = {
+  title: 'Marketplace Policy',
+  description:
+    'Rules for publishing tools to the PPTB Marketplace, covering naming, branding, listing quality, submission volume, destructive operations, ratings, and enforcement.',
+}
+
+export const sections = [
+  { title: 'Why This Policy Exists', id: 'why-this-policy-exists' },
+  { title: 'Scope', id: 'scope' },
+  { title: 'Tool Naming', id: 'tool-naming' },
+  { title: 'Attribution and Branding', id: 'attribution-and-branding' },
+  { title: 'Listing Quality and Duplication', id: 'listing-quality-and-duplication' },
+  { title: 'Submission Volume', id: 'submission-volume' },
+  { title: 'Destructive Operations', id: 'destructive-operations' },
+  { title: 'Data and Network Use', id: 'data-and-network-use' },
+  { title: 'Ratings and Trust Signals', id: 'ratings-and-trust-signals' },
+  { title: 'Enforcement', id: 'enforcement' },
+  { title: 'Existing Tools', id: 'existing-tools' },
+  { title: 'Next Steps', id: 'next-steps' },
+]
+
+# Marketplace Policy
+
+These rules apply to every tool published to the PPTB Marketplace. They keep the marketplace useful for the people who install tools, and fair for the people who build them. {{ className: 'lead' }}
+
+## Why This Policy Exists {{ anchor: true }}
+
+The PPTB Marketplace is a shared community space. A user browsing it should find tools by **what they do**, judge them by **how well they work**, and trust that every listing is there because it solves a real problem.
+
+Publishers are welcome to build a reputation through PPTB. The way to do that is by shipping tools people rely on and maintaining them well — not by turning listings into advertising space. When a rule here feels ambiguous, the PPTB team applies it in favour of the marketplace user.
+
+## Scope {{ anchor: true }}
+
+This policy applies to:
+
+- Every tool listed in the public PPTB Marketplace, whether Verified or Unverified
+- Every version of a tool, including updates to tools that were listed before this policy was published (see [Existing Tools](#existing-tools))
+- Individuals, companies, consultancies, and community groups alike
+
+It does not apply to tools distributed only through a [Private Marketplace](/tool-installation/private-marketplace) or installed directly from npm or the local filesystem.
+
+## Tool Naming {{ anchor: true }}
+
+The `displayName` field is what users see in the marketplace, sidebar, and search. It must describe **what the tool does**.
+
+**Rules**
+
+1. **No publisher branding in the name.** Do not prefix or suffix the `displayName` with a company, consultancy, product line, personal name, handle, or initialism.
+2. **No suite naming.** Do not use the name to group tools into a branded family or suite. Group related tools in your README or publisher links instead.
+3. **No implied endorsement.** Do not use *Microsoft*, *Official*, *PPTB*, *Power Platform ToolBox*, or *Verified* in a name, or anything suggesting the tool is published or endorsed by Microsoft or the PPTB team, unless it is.
+4. **No borrowed names.** Do not use the name of another tool — in PPTB, XrmToolBox, or elsewhere — unless you are its author or have the author's permission. Describing compatibility in the README ("inspired by", "port of") is fine.
+5. **No keyword stuffing.** No version numbers, emoji, ALL-CAPS for emphasis, superlatives (*Best*, *Ultimate*, *#1*), or lists of features in the name.
+6. **No near-duplicates.** Do not choose a name that is confusingly similar to an existing marketplace tool.
+
+| Not allowed | Allowed instead |
+| --- | --- |
+| `ACME Access Checker` | `Access Checker` |
+| `Access Checker by ACME` | `Access Checker` |
+| `JD Solution Inspector` | `Solution Inspector` |
+| `ACME ALM Suite — Layer Sweeper` | `Unmanaged Layer Sweeper` |
+| `Official Plugin Tracer` | `Plugin Trace Viewer` |
+| `🚀 BEST Bulk Updater v2!!` | `Bulk Record Updater` |
+
+<Note type="information">
+  Your npm **package name** may carry your scope, for example `@acme/access-checker`. The scope identifies the publisher at the package level; the `displayName` identifies the tool to users. Both are shown in the tool detail view.
+</Note>
+
+## Attribution and Branding {{ anchor: true }}
+
+You deserve credit for your work. Credit belongs in the places designed for it.
+
+**Allowed**
+
+- Your name and URL in `contributors` (shown in the tool detail view)
+- Your npm scope
+- A credits or "about the author" section in your README
+- **One** unobtrusive attribution link inside the tool, such as a small "Built by …" line in a footer or About panel
+
+**Not allowed**
+
+- Advertising, upsells, or promotion of paid services or products inside the tool
+- Lead capture: contact forms, newsletter sign-ups, "book a call" prompts, or requiring sign-up with the publisher to use any feature
+- Splash screens, interstitials, or banners whose purpose is promotion
+- Opening external pages automatically, or without a direct user action
+- Using a company or personal logo as the tool `icon` — the icon must represent the tool
+- Visual styling that ignores the PPTB app theme. Your tool may have its own design, but it must still [react to the light and dark themes](/tool-development/maturity-model#reviewer-checklist) and stay legible in both
+
+## Listing Quality and Duplication {{ anchor: true }}
+
+Every listing must offer real, distinct value.
+
+- **Check before you build.** Search the marketplace and the [Tool Ideas board](https://www.powerplatformtoolbox.com/tool-ideas) first. If a tool already does most of what you need, contributing to it is strongly preferred over publishing a competitor.
+- **Explain the difference.** If your tool overlaps substantially with an existing one, the README must state what it does that the existing tool does not. Overlap is allowed; undifferentiated copies are not.
+- **One job, one tool — not one tool per feature.** Do not split a single tool into several thin listings to occupy more of the marketplace. Closely related features belong in tabs or views of one tool.
+- **No placeholders.** Do not publish stubs, demos, "coming soon" tools, or tools whose core feature does not work, to reserve a name or a category.
+- **Accurate descriptions.** The `description` and README must match what the tool actually does today. Do not describe planned features as present.
+
+## Submission Volume {{ anchor: true }}
+
+To keep intake reviews fair and to protect quality, new publishers have limits on how fast they can list tools.
+
+| Publisher status | Limit |
+| --- | --- |
+| **New publisher** — no tool that has been listed for 60 days or more | Up to **3** listed tools, and **1** submission in intake at a time |
+| **Established publisher** — at least one tool listed for 60 days or more with healthy bug response, or at least one Verified tool | Up to **2** submissions in intake at a time; no cap on listed tools |
+
+A *publisher* is the account that submits the tool. Using multiple accounts to get around these limits is a violation of this policy.
+
+The PPTB team may raise a limit for a publisher with a clear track record. Ask in the PPTB Discord.
+
+## Destructive Operations {{ anchor: true }}
+
+Tools that change or delete data or metadata can cause real harm in customer environments. If your tool deletes, overwrites, bulk-updates, removes solution layers, changes schema, reassigns ownership, or changes security configuration, it must:
+
+1. **Never act on load.** No destructive operation runs without a deliberate user action.
+2. **Preview first.** Show what will change before it changes — a dry run, a list of affected records or components, or a count.
+3. **Confirm explicitly.** The confirmation must name the **target environment** and the **scope** (for example, the number of records or components affected).
+4. **Offer a way back where feasible.** Export, backup, or snapshot before changing, where the platform allows it. Where it does not, say so plainly in the confirmation.
+5. **Document it.** Include a **"What this tool changes"** section in the README listing every kind of change the tool can make.
+
+## Data and Network Use {{ anchor: true }}
+
+- Send data only to the endpoints declared in `cspExceptions`, and document why each is needed. See [CSP Configuration](/tool-development/csp-configuration).
+- Do not send environment data, user data, or usage telemetry to publisher-controlled endpoints unless the user is told what is sent and why, and the tool works without it.
+- Follow the guidance in [Access to Data](/data-access).
+
+## Ratings and Trust Signals {{ anchor: true }}
+
+Ratings and usage metrics help users choose tools and feed into the [Tool Maturity Model](/tool-development/maturity-model). Do not manipulate them.
+
+- Do not rate your own tools, or ask contributors, colleagues, or employees to rate them.
+- Do not offer anything in exchange for ratings.
+- Do not inflate downloads or active users through scripts or repeated installs.
+
+The PPTB team may discount signals that appear artificial when reviewing a tool for verification.
+
+## Enforcement {{ anchor: true }}
+
+Anyone can flag a tool using [Report a Concern](/tool-installation/report-a-concern). The PPTB team also checks policy compliance during intake and verification review.
+
+When a violation is confirmed, the team applies the lightest action that resolves it:
+
+| Step | Action | Typical cause |
+| --- | --- | --- |
+| **1. Request change** | The publisher is asked to fix the issue within **14 days**. The tool stays listed. | Naming, attribution, or README issues |
+| **2. Verified badge removed** | The badge is removed immediately. Full re-verification is required to restore it. | Any confirmed violation in a Verified tool |
+| **3. Tool delisted** | The tool is removed from the marketplace until it complies. | Unresolved step 1, misleading listings, unsafe destructive operations |
+| **4. Publisher suspended** | The publisher cannot submit new tools or updates. | Repeated violations, manipulation of trust signals, evading limits, malicious behaviour |
+
+Malicious code, credential theft, or data exfiltration leads directly to delisting and suspension without a change request.
+
+To discuss or appeal a decision, contact the PPTB team in the PPTB Discord. The team's decision is final.
+
+## Existing Tools {{ anchor: true }}
+
+Tools listed before this policy was published have **30 days** from its publication to comply. After that, any new version submitted to intake must comply, and enforcement applies as described above.
+
+## Next Steps {{ anchor: true }}
+
+<div className="not-prose mt-6 mb-16 flex gap-3">
+  <Button href="/policies/ai-assisted-development" arrow="right">
+    <>AI-Assisted Development</>
+  </Button>
+  <Button href="/tool-development/publishing" variant="outline" arrow="right">
+    <>Publish Your Tool</>
+  </Button>
+</div>

@@ -351,6 +351,16 @@ export const navigation: Array<NavGroup> = [
     ],
   },
   {
+    title: 'Policies',
+    links: [
+      { title: 'Marketplace Policy', href: '/policies/marketplace' },
+      {
+        title: 'AI-Assisted Development',
+        href: '/policies/ai-assisted-development',
+      },
+    ],
+  },
+  {
     title: 'ToolBox Development',
     links: [{ title: 'Overview', href: '/toolbox-development' }],
   },

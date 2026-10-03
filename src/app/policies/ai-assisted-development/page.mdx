@@ -1,0 +1,102 @@
+export const metadata = {
+  title: 'AI-Assisted Development Policy',
+  description:
+    'How PPTB treats tools built with AI coding assistants: publisher accountability, required human review, disclosure, and what is not allowed.',
+}
+
+export const sections = [
+  { title: 'Our Position', id: 'our-position' },
+  { title: 'You Are the Author', id: 'you-are-the-author' },
+  { title: 'Before You Publish', id: 'before-you-publish' },
+  { title: 'Disclosure', id: 'disclosure' },
+  { title: 'Not Allowed', id: 'not-allowed' },
+  { title: 'Issues and Community Interaction', id: 'issues-and-community-interaction' },
+  { title: 'Enforcement', id: 'enforcement' },
+  { title: 'Next Steps', id: 'next-steps' },
+]
+
+# AI-Assisted Development Policy
+
+AI coding assistants are welcome in PPTB tool development. This policy explains the responsibilities that come with using them. {{ className: 'lead' }}
+
+## Our Position {{ anchor: true }}
+
+PPTB itself is built with AI assistance, and we publish [AI Agent Skills](/tool-development/ai-agent-skills) to help you build tools with your assistant of choice. We do not ban, penalise, or try to detect AI-written code.
+
+What we care about is the result. **Every tool is held to the same bar regardless of how it was written**: it must work, be safe, be honestly described, and be maintained. AI makes it fast to produce code; it does not make it fast to earn the trust of the people installing your tool.
+
+This policy works alongside the [Marketplace Policy](/policies/marketplace). Where they overlap, both apply.
+
+## You Are the Author {{ anchor: true }}
+
+When you publish a tool, you are accountable for every line of it, its dependencies, its README, and its behaviour in a user's environment.
+
+"The AI generated it" is not an explanation for a bug, a security issue, a misleading description, or a policy violation. If you cannot explain what a part of your tool does, you are not ready to publish it.
+
+## Before You Publish {{ anchor: true }}
+
+If an AI assistant wrote a substantial part of your tool, check the following before you submit it. These are the problems we most often see in AI-generated tools.
+
+### Code and APIs
+
+- **Only documented APIs.** Confirm that every `toolboxAPI`, `dataverseAPI`, and `powerplatformAPI` call exists in the [API Reference](/tool-development/api-reference). Assistants invent plausible-looking methods and parameters.
+- **No unsafe patterns.** Remove `eval`, dynamic script injection, hard-coded secrets or tokens, and logging of sensitive data.
+- **Bounded operations.** Check paging, batching, and loop limits on any query or bulk operation. Generated code often assumes small datasets.
+- **Destructive operations follow the rules.** See [Destructive Operations](/policies/marketplace#destructive-operations).
+
+### Dependencies
+
+- **Every package is real and needed.** Verify each dependency on npm. Assistants can suggest packages that do not exist — and attackers register those names. Remove packages the tool does not use.
+- **Clean audit.** Run `npm audit` and resolve critical and high vulnerabilities.
+- **Minimal CSP exceptions.** Remove any `cspExceptions` entry the tool does not need. See [CSP Configuration](/tool-development/csp-configuration).
+
+### Testing
+
+- **Tested by a person, against a real environment.** Run the tool yourself against a real Dataverse environment, in both light and dark themes, with realistic data volumes. Passing a build or [`pptb-validate`](/tool-development/validation) is not testing.
+- **Error paths work.** Check what happens with missing permissions, expired connections, and empty results.
+
+### Documentation
+
+- **The README describes the tool you built.** Remove features the tool does not have, generic filler, and unverified claims about performance or compatibility.
+- **Screenshots are real.** Screenshots and GIFs must show the actual tool, not mock-ups.
+
+## Disclosure {{ anchor: true }}
+
+If AI generated a **substantial part** of the tool's code, add a short statement to your README, for example:
+
+```md
+## AI Assistance
+
+Parts of this tool were generated with GitHub Copilot and reviewed, tested, and maintained by the contributors listed in package.json.
+```
+
+Disclosure is not a penalty and does not affect verification. It helps users and reviewers understand how the tool was made, and it signals that a person has taken responsibility for it.
+
+## Not Allowed {{ anchor: true }}
+
+- **Mass-producing tools.** Generating tools in bulk from an idea list or catalogue gap analysis to occupy marketplace categories, rather than to solve problems you understand. The [submission limits](/policies/marketplace#submission-volume) apply.
+- **Generated listings that mislead.** Descriptions, READMEs, or screenshots that claim functionality the tool does not have.
+- **Unreviewed code in destructive tools.** Publishing AI-generated code that deletes or modifies data without having reviewed and tested every destructive path yourself.
+- **Automated submissions.** Using agents or scripts to submit tools, updates, or verification requests on your behalf without your review of each one.
+- **Generated trust signals.** AI-written ratings, reviews, issues, or endorsements, from any account.
+
+## Issues and Community Interaction {{ anchor: true }}
+
+You may use AI to help draft issue replies, release notes, and documentation. Review everything before posting.
+
+An automated or generated reply that does not engage with the reported problem is **not** a maintainer response. It does not count towards the bug-response thresholds in the [Tool Maturity Model](/tool-development/maturity-model#reviewer-checklist).
+
+## Enforcement {{ anchor: true }}
+
+Violations of this policy are handled using the same steps as the [Marketplace Policy](/policies/marketplace#enforcement).
+
+## Next Steps {{ anchor: true }}
+
+<div className="not-prose mt-6 mb-16 flex gap-3">
+  <Button href="/tool-development/ai-agent-skills" arrow="right">
+    <>AI Agent Skills</>
+  </Button>
+  <Button href="/policies/marketplace" variant="outline" arrow="left">
+    <>Marketplace Policy</>
+  </Button>
+</div>
