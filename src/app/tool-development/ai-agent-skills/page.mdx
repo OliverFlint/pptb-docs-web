@@ -1,15 +1,15 @@
 export const metadata = {
   title: 'AI Agent Skills',
   description:
-    'Use the pptb-agent-skills repository to teach Claude Code and GitHub Copilot how to scaffold, fix, and publish Power Platform ToolBox tools.',
+    'Use the pptb-agent-skills repository to teach Claude Code, GitHub Copilot, and OpenAI Codex how to build Power Platform ToolBox tools and review marketplace readiness.',
 }
 
 export const sections = [
   { title: 'Overview', id: 'overview' },
-  { title: 'What the Skill Teaches', id: 'what-the-skill-teaches' },
+  { title: 'What the Skills Teach', id: 'what-the-skill-teaches' },
   { title: 'Prerequisites', id: 'prerequisites' },
-  { title: 'Installing the Skill', id: 'installing-the-skill' },
-  { title: 'Using the Skill', id: 'using-the-skill' },
+  { title: 'Installing the Skills', id: 'installing-the-skill' },
+  { title: 'Using the Skills', id: 'using-the-skill' },
   { title: 'Reference Files', id: 'reference-files' },
   { title: 'Scope and Limitations', id: 'scope-and-limitations' },
   { title: 'Next Steps', id: 'next-steps' },
@@ -17,21 +17,28 @@ export const sections = [
 
 # AI Agent Skills
 
-[pptb-agent-skills](https://github.com/PowerPlatformToolBox/pptb-agent-skills) is a companion repository that teaches AI coding assistants — Claude Code, Cowork, and GitHub Copilot — how to build tools for Power Platform ToolBox. Instead of relying on generic web-app boilerplate, the skill is grounded directly in these docs and in the `generator-pptb` scaffolding tool. {{ className: 'lead' }}
+[pptb-agent-skills](https://github.com/PowerPlatformToolBox/pptb-agent-skills) is a companion repository that teaches AI coding assistants — Claude Code, Cowork, GitHub Copilot, and OpenAI Codex — how to build tools for Power Platform ToolBox and review them for marketplace readiness. The skills are grounded directly in these docs, marketplace policies, and the `generator-pptb` scaffolding tool. {{ className: 'lead' }}
 
 ## Overview {{ anchor: true }}
 
-The repository ships a single [Skill](https://github.com/PowerPlatformToolBox/pptb-agent-skills) called `tool-dev`, built on the open `SKILL.md` standard (YAML frontmatter + Markdown body). Claude Skills and GitHub Copilot Agent Skills both read the same file, so there is no separate entry point per assistant.
+The repository ships two skills, built on the open `SKILL.md` standard (YAML frontmatter + Markdown body):
 
-Once the skill is installed in your project, you can describe what you want in plain language — scaffold a tool, fix a failing manifest, wire up inter-tool invocation, expose a tool to agents — and the assistant follows the workflow documented in the skill instead of guessing.
+- **[tool-dev](https://github.com/PowerPlatformToolBox/pptb-agent-skills/tree/main/tool-dev)** — scaffold, fix, debug, validate, and publish PPTB tools.
+- **[intake-policy-review](https://github.com/PowerPlatformToolBox/pptb-agent-skills/tree/main/intake-policy-review)** — review an existing tool against current marketplace and AI-assisted-development policies, using repository evidence.
+
+Claude Skills, GitHub Copilot Agent Skills, and OpenAI Codex all read the same `SKILL.md` for each skill, so there is no separate entry point per assistant.
+
+Once either or both skills are installed in your project, you can describe what you want in plain language — scaffold a tool, fix a failing manifest, wire up inter-tool invocation, expose a tool to agents, or review marketplace readiness — and the assistant follows the relevant skill's workflow.
 
 <Note type="warning">
-  This skill is not yet tested end-to-end against real build prompts. Try it
-  against a couple of realistic prompts (see [Using the Skill](#using-the-skill))
-  before relying on it in a pipeline or generator.
+  The `tool-dev` skill is not yet tested end-to-end against real build prompts.
+  Try it against a couple of realistic prompts (see [Using the
+  Skill](#using-the-skill)) before relying on it in a pipeline or generator.
 </Note>
 
-## What the Skill Teaches {{ anchor: true }}
+## What the Skills Teach {{ anchor: true, id: 'what-the-skill-teaches' }}
+
+### Tool development
 
 The `tool-dev` skill walks an assistant through the same lifecycle described throughout this Tool Development section:
 
@@ -48,51 +55,83 @@ The `tool-dev` skill walks an assistant through the same lifecycle described thr
   version.
 </Note>
 
+### Marketplace intake review
+
+The `intake-policy-review` skill accepts a GitHub repository URL, a tool subfolder or README path, or a local tool repository. It checks the latest [Marketplace Policy](/policies/marketplace) and [AI-Assisted Development Policy](/policies/ai-assisted-development), then inspects the README, manifest, source code, dependencies, tests, and relevant visual assets.
+
+The review covers:
+
+- Marketplace metadata, naming, publisher attribution, icons, and whether README claims match the implementation
+- Read/write behavior, including preview, confirmation, environment locking, and rollback safeguards for state-changing tools
+- The required `## What this tool changes` README section where applicable
+- API usage, bounded operations, pagination, batching, and concurrency
+- Privacy, external network calls, telemetry, and CSP behavior
+- Screenshot authenticity, real-environment testing, AI assistance disclosure where applicable, dependency audits, validation, and theme testing
+
+The assistant returns an overall assessment, an **Area / Status / Finding** table, detailed findings with concrete replacement snippets where useful, prioritized pre-submission changes, and a final readiness verdict. It distinguishes policy requirements from recommendations and does not impose destructive-operation controls on read-only tools.
+
 ## Prerequisites {{ anchor: true }}
 
 - **Node.js and npm** — the workflow runs `yo`, `generator-pptb`, and `@pptb/types` (which provides the `pptb-validate` CLI). The skill does not install these for you; the assistant installs them per-project as it works through the steps.
 - **PPTB desktop app** installed locally if you want the assistant to exercise the debug loop (`dev-watch` → Load Local Tool) described in [Debugging Your Tool](/tool-development/debugging). Not required just to scaffold or validate a tool.
-- **Claude Code / Cowork** or **GitHub Copilot** with project or repo skills enabled, so the deployed `SKILL.md` is actually picked up.
+- **Claude Code / Cowork**, **GitHub Copilot**, or **OpenAI Codex** with project or repo skills enabled, so the deployed `SKILL.md` is actually picked up.
+- **Policy and repository access** for `intake-policy-review` — the assistant needs access to the live policy pages and the tool's source files. Node.js/npm is needed when running validation or dependency audits; the PPTB desktop app is needed for real-environment testing.
 
-## Installing the Skill {{ anchor: true }}
+## Installing the Skills {{ anchor: true, id: 'installing-the-skill' }}
 
-Clone or download [pptb-agent-skills](https://github.com/PowerPlatformToolBox/pptb-agent-skills), then copy the `tool-dev/` folder into your project in the location your assistant expects.
+Clone or download [pptb-agent-skills](https://github.com/PowerPlatformToolBox/pptb-agent-skills), then copy either or both skill folders into your project in the location your assistant expects. Run these commands from the cloned repository using Bash or Git Bash.
 
 ### Claude Code / Cowork
 
 ```bash
 cp -r tool-dev/ <project>/.claude/skills/pptb-tool-dev/
+cp -r intake-policy-review/ <project>/.claude/skills/intake-policy-review/
 ```
 
 ### GitHub Copilot
 
 ```bash
 cp -r tool-dev/ <repo>/.github/skills/pptb-tool-dev/
+cp -r intake-policy-review/ <repo>/.github/skills/intake-policy-review/
 ```
 
-Both assistants read the same `SKILL.md` and `references/` folder directly from either location — there is nothing agent-specific to configure beyond where the folder lives.
+### OpenAI Codex
 
-## Using the Skill {{ anchor: true }}
+For repository-scoped skills, copy the folders into `<repo>/.agents/skills/`:
 
-Once deployed, ask your assistant naturally. The `description` field in `tool-dev/SKILL.md` is what triggers the skill, so no special command syntax is required. A few example prompts and what the assistant should do in response:
+```bash
+mkdir -p <repo>/.agents/skills
+cp -r tool-dev/ <repo>/.agents/skills/pptb-tool-dev/
+cp -r intake-policy-review/ <repo>/.agents/skills/intake-policy-review/
+```
 
-- *"Scaffold a PPTB tool that lets me bulk-update account records"* → runs `yo pptb`, picks a framework, wires up `dataverseAPI` calls, and writes a manifest that passes `pptb-validate`.
-- *"My tool's `package.json` keeps failing `pptb-validate`, here's the file"* → skips scaffolding, reads the actual file, and fixes it against the manifest schema.
-- *"Make my tool launchable from another PPTB tool"* → wires up `launchTool` / `getLaunchContext` / `returnData` without re-scaffolding anything.
-- *"Expose my tool to an agent via MCP"* → adds the `agents` block and an `invokeHeadless` entry point.
+All three assistants read each skill's `SKILL.md` and any supporting files directly from their respective locations — there is nothing agent-specific to configure beyond where the folder lives.
+
+## Using the Skills {{ anchor: true, id: 'using-the-skill' }}
+
+Once deployed, ask your assistant naturally. The `description` field in each `SKILL.md` is what triggers the relevant skill, so no special command syntax is required. A few example prompts and what the assistant should do in response:
+
+- _"Scaffold a PPTB tool that lets me bulk-update account records"_ → runs `yo pptb`, picks a framework, wires up `dataverseAPI` calls, and writes a manifest that passes `pptb-validate`.
+- _"My tool's `package.json` keeps failing `pptb-validate`, here's the file"_ → skips scaffolding, reads the actual file, and fixes it against the manifest schema.
+- _"Make my tool launchable from another PPTB tool"_ → wires up `launchTool` / `getLaunchContext` / `returnData` without re-scaffolding anything.
+- _"Expose my tool to an agent via MCP"_ → adds the `agents` block and an `invokeHeadless` entry point.
+- _"Review this PPTB repository for marketplace intake readiness"_ → uses `intake-policy-review` to verify the current policy pages, inspect repository evidence, and report findings with prioritized changes and a readiness verdict.
+- _"Check this tool folder against the marketplace and AI-assisted-development policies"_ → scopes the review to that tool, checking shared code when it materially affects its behavior.
 
 ## Reference Files {{ anchor: true }}
 
-`SKILL.md` is deliberately short. It defers to a `references/` folder that is loaded on demand, so the assistant only pulls in the documentation it needs for the task at hand:
+The `tool-dev/SKILL.md` entry point defers to a `references/` folder that is loaded on demand, so the assistant only pulls in the documentation it needs for the task at hand:
 
-| File | Covers |
-| --- | --- |
-| `references/manifest.md` | `package.json` and `pptb.config.json` schema and validation rules |
-| `references/apis.md` | `toolboxAPI` / `dataverseAPI` / `powerplatformAPI` quick reference |
-| `references/build-and-csp.md` | IIFE bundling gotchas and CSP configuration |
-| `references/invocation.md` | Inter-tool invocation (`launchTool` / `getLaunchContext` / `returnData`) |
-| `references/agent-integration.md` | MCP/agent exposure, `invokeHeadless`, execution modes |
+| File                                 | Covers                                                                                |
+| ------------------------------------ | ------------------------------------------------------------------------------------- |
+| `references/manifest.md`             | `package.json` and `pptb.config.json` schema and validation rules                     |
+| `references/apis.md`                 | `toolboxAPI` / `dataverseAPI` / `powerplatformAPI` quick reference                    |
+| `references/build-and-csp.md`        | IIFE bundling gotchas and CSP configuration                                           |
+| `references/invocation.md`           | Inter-tool invocation (`launchTool` / `getLaunchContext` / `returnData`)              |
+| `references/agent-integration.md`    | MCP/agent exposure, `invokeHeadless`, execution modes                                 |
 | `references/debugging-publishing.md` | The `dev-watch` loop, the `pptb-validate` CLI, `npm publish`, and registry submission |
+
+`intake-policy-review` contains a standalone `SKILL.md`. It reads the live policy pages and repository evidence during each review rather than relying on bundled policy snapshots.
 
 <Note type="information">
   If you maintain a tool generator or template, you can drop `manifest.md` and
@@ -103,9 +142,10 @@ Once deployed, ask your assistant naturally. The `description` field in `tool-de
 
 ## Scope and Limitations {{ anchor: true }}
 
-- The skill scaffolds via `generator-pptb` (`yo pptb`) only.
+- The `tool-dev` skill scaffolds via `generator-pptb` (`yo pptb`) only.
 - [`sample-tools`](https://github.com/PowerPlatformToolBox/sample-tools) is intentionally **not** used as a scaffold source — it is considered outdated by the maintainers.
 - `Power-Maverick/PPTB-Tools` is referenced only as a pattern/convention example for real, shipped tools — never as a scaffolding template.
+- The `intake-policy-review` assessment does not replace marketplace maintainer approval or real-environment human testing. Validation and audit commands are only reported as passed when executed or supported by repository evidence.
 
 ## Next Steps {{ anchor: true }}
 
